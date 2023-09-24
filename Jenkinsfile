@@ -25,7 +25,7 @@ pipeline {
             script{
                 echo "========================> main test"
                 sh '''
-                    npm install -g @angular/cli
+                    sudo npm install -g @angular/cli
                     ls
                 '''
             }
