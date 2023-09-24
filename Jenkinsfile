@@ -46,6 +46,7 @@ pipeline {
                     cat init_env.sh
 
                     echo START =======> execute scripts
+                    echo python3 make_params_front.py ${JSON_PKG.name} ${JSON_PKG.version} dev
                     python3 make_params_front.py ${JSON_PKG.name} ${JSON_PKG.version} dev
                     ls
 
@@ -143,7 +144,7 @@ pipeline {
                     echo ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
                     printenv
                     echo Pulling... $GIT_BRANCH
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} ${JSON_PARAMS.name}-${JSON_PARAMS.APP_VERSION}.zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
+                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
                     python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} start_ebank.sh start_ebank.sh
                     python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} stop_ebank.sh stop_ebank.sh
                     python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} init_env.sh init_env.sh                          
