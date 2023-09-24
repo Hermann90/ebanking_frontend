@@ -9,6 +9,8 @@ pipeline {
     stage('MAKE ENV') {
         steps {
             script{
+                JSON_PKG = readJSON file: 'package.json';
+
                 echo "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/init_env.sh"
                 sh "sudo /home/ec2-user/ebanking_backend/init_env.sh"
                 echo "test: $NEXUS_USER"
@@ -28,8 +30,8 @@ pipeline {
                     
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/init_env.sh" -H "accept: application/json" -o init_env.sh
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/conf_nexus_repo.xml" -H "accept: application/json" -o conf_nexus_repo.xml
-                    echo curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/make_params.py" -H "accept: application/json" -o make_params.py
-                    curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/make_params.py" -H "accept: application/json" -o make_params.py
+                    echo curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/make_params_front.py" -H "accept: application/json" -o make_params_front.py
+                    curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/make_params_front.py" -H "accept: application/json" -o make_params_front.py
                     
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/stop_ebank.sh" -H "accept: application/json" -o stop_ebank.sh
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/start_ebank.sh" -H "accept: application/json" -o start_ebank.sh
@@ -44,24 +46,14 @@ pipeline {
                     cat init_env.sh
 
                     echo START =======> execute scripts
-                    python3 make_params.py pom.xml dev
-                    ./init_env.sh
+                    python3 make_params_front.py ${JSON_PKG.name} ${JSON_PKG.version} dev
                     ls
 
                     echo START ===============> Configure ENV Params : 
                 """
      
                 JSON_PARAMS = readJSON file: 'data.json'
-
-                sh """
-
-                    echo " START ========================> Configure Nexus xml Credential (REPO ) for the correct environment"
-                    sed -i 's/ENV_ROPO_NAME/${JSON_PARAMS.NEXUS_REPO_NAME}/g' conf_nexus_repo.xml
-                    sed -i 's/ENV_REPO_USER_NAME/${JSON_PARAMS.NEXUS_USER}/g' conf_nexus_repo.xml
-                    sed -i 's/ENV_REPO_PASSWORD/${JSON_PARAMS.NEXUS_PASSWORD}/g' conf_nexus_repo.xml
-
-                    ls
-                """       
+   
             } 
         }
     }
@@ -109,10 +101,9 @@ pipeline {
     stage('MAKE ZIP FILE'){
         steps{
             script{
-                PACKAGE_JSON_PARAMS = readJSON file: 'package.json';
                 sh """
-                    echo sudo zip ${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip dist
-                    sudo zip ${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip dist
+                    echo sudo zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip dist
+                    sudo zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip dist
                     ls
                 """                  
             }
@@ -122,10 +113,9 @@ pipeline {
     stage('PUSH ARTIFACTS : NEXUS ZIP FILE'){
         steps{
             script{
-                PACKAGE_JSON_PARAMS = readJSON file: 'package.json';
                 sh """
-                    echo curl -v -u admin:devops --upload-file ${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip ${NEXUS_URL}:8081/repository/ebankins_frontend/${PACKAGE_JSON_PARAMS.name}/${PACKAGE_JSON_PARAMS.version}/${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip
-                    curl -v -u admin:devops --upload-file ${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip ${NEXUS_URL}:8081/repository/ebankins_frontend/${PACKAGE_JSON_PARAMS.name}/${PACKAGE_JSON_PARAMS.version}/${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip
+                    echo curl -v -u admin:devops --upload-file ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip ${NEXUS_URL}:8081/repository/ebankins_frontend/${JSON_PARAMS.APP_NAME}/${JSON_PARAMS.APP_VERSION}/${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
+                    curl -v -u admin:devops --upload-file ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip ${NEXUS_URL}:8081/repository/ebankins_frontend/${JSON_PARAMS.APP_NAME}/${JSON_PARAMS.APP_VERSION}/${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
                 """                  
             }
         }
@@ -138,7 +128,6 @@ pipeline {
     stage('DEPLOY APP'){
         steps{
             script{
-                PACKAGE_JSON_PARAMS = readJSON file: 'package.json';
                 sh """
                     python3 -m venv ebank
                     source ebank/bin/activate
@@ -150,21 +139,23 @@ pipeline {
                     echo ${JSON_PARAMS.DEPLOY_HOST_NAME}
                     echo ${JSON_PARAMS.APP_USER}
                     echo ${JSON_PARAMS.APP_PASSWORD}
-                    echo $APP_FRONTEND_DIR
-                    echo ${pom.name}-${pom.version}.jar
+                    echo $${JSON_PARAMS.APP_PATH}
+                    echo ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
                     printenv
                     echo Pulling... $GIT_BRANCH
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $APP_FRONTEND_DIR ${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip ${PACKAGE_JSON_PARAMS.name}-${PACKAGE_JSON_PARAMS.version}.zip
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $APP_FRONTEND_DIR start_ebank.sh start_ebank.sh
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $APP_FRONTEND_DIR stop_ebank.sh stop_ebank.sh
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $APP_FRONTEND_DIR init_env.sh init_env.sh                          
+                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $${JSON_PARAMS.APP_PATH} ${JSON_PARAMS.name}-${JSON_PARAMS.APP_VERSION}.zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
+                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $${JSON_PARAMS.APP_PATH} start_ebank.sh start_ebank.sh
+                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $${JSON_PARAMS.APP_PATH} stop_ebank.sh stop_ebank.sh
+                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} $${JSON_PARAMS.APP_PATH} init_env.sh init_env.sh                          
                 """                  
             }
         }
     }
 
 
-    /*
+    /*"DEVOPS_SCRIPTS_REPO" : os.getenv('DEVOPS_SCRIPTS_REPO'), "APP_USER":os.getenv('APP_QA_USER'), "APP_PASSWORD":os.getenv('APP_QA_PASSWORD'), "APP_PATH":os.getenv('${JSON_PARAMS.APP_PATH}'), 
+                           "APP_NAME" : app_name})
+
     stage('Install') {
       steps { sh 'npm install' }
     }
@@ -173,9 +164,9 @@ pipeline {
             steps {
                 script{
                     echo "========================> main test"
-                    echo "${PACKAGE_JSON_PARAMS.NEXUS_REPO_NAME}"
+                    echo "${JSON_PARAMS.NEXUS_REPO_NAME}"
                     sh '''sudo cat conf_nexus_repo.xml > /opt/maven/conf/settings.xml
-                     echo ${APP_VERSION}
+                     echo ${APP_APP_VERSION}
                     mvn clean
                     mvn package -DskipTests
                     echo ${NEXUS_URL}:8081/repository/$DATABASE_URL_PROD/init_env.sh
