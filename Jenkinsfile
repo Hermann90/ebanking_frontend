@@ -40,12 +40,36 @@ pipeline {
                 sh '''
                     sudo ng build
                     ls
+                    printenv
                 '''
             }
         }
     }
 
+    stage('MAKE ZIP FILE'){
+        steps{
+            script{
+                JSON_PARAMS = readJSON file: 'package.json';
+                sh """
+                    echo sudo zip ${JSON_PARAMS.name}-${JSON_PARAMS.version}.zip dist
+                    sudo zip ${JSON_PARAMS.name}-${JSON_PARAMS.version}.zip dist
+                    ls
+                """                  
+            }
+        }
+    }
 
+    stage('PUSH ARTIFACTS : NEXUS ZIP FILE'){
+        steps{
+            script{
+                JSON_PARAMS = readJSON file: 'package.json';
+                sh """
+                    echo curl -v -u admin:devops --upload-file ${JSON_PARAMS.name}-${JSON_PARAMS.version}.zip ${NEXUS_URL}:8081/repository/ebankins_frontend/${JSON_PARAMS.name}/${JSON_PARAMS.version}/${JSON_PARAMS.name}-${JSON_PARAMS.version}.zip
+                    curl -v -u admin:devops --upload-file ${pom.name}-${pom.version}.zip ${NEXUS_URL}:8081/repository/ebankins_frontend/${JSON_PARAMS.name}/${JSON_PARAMS.version}/${JSON_PARAMS.name}-${JSON_PARAMS.version}.zip
+                """                  
+            }
+        }
+    }
     /*
     stage('Install') {
       steps { sh 'npm install' }

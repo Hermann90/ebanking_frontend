@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {FormBuilder, FormGroup} from "@angular/forms"
 import { AuthService } from '../services/auth.service';
 import { Route, Router } from '@angular/router';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -10,6 +11,7 @@ import { Route, Router } from '@angular/router';
 })
 export class LoginComponent implements OnInit{
   formLogin! : FormGroup;
+  version :string = environment.version;
   constructor(private fb : FormBuilder, private authService : AuthService,
     private router : Router){ }
 

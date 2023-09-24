@@ -2,9 +2,12 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+import packageInfo from '../../package.json';
+
 export const environment = {
   production: false,
-  backendHost : "http://localhost:8085"
+  backendHost : "http://localhost:8085",
+  version: packageInfo.version,
 };
 
 /*
@@ -14,4 +17,4 @@ export const environment = {
  * This import should be commented out in production mode because it will have a negative impact
  * on performance if an error is thrown.
  */
-// import 'zone.js/plugins/zone-error';  // Included with Angular CLI.
+
