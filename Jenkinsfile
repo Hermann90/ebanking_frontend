@@ -14,6 +14,55 @@ pipeline {
                     node -v
                     npm -v
                     npm install
+                    ls
+                '''
+            }
+        }
+    }
+
+    stage('compile'){
+        steps{
+            script{
+                echo "========================> main test"
+                sh '''
+                    npm install -g @angular/cli
+                    ls
+                '''
+            }
+        }
+    }
+
+    stage('ANALYZE'){
+        steps{
+            script{
+                echo "========================> main test"
+                sh '''
+                    npm run-script lint
+                    ls
+                '''
+            }
+        }
+    }
+
+    stage('UNIT TEST'){
+        steps{
+            script{
+                echo "========================> main test"
+                sh '''
+                    npm run-script test
+                    ls
+                '''
+            }
+        }
+    }
+
+    stage('BUILD'){
+        steps{
+            script{
+                echo "========================> main test"
+                sh '''
+                    npm run-script build
+                    ls
                 '''
             }
         }
@@ -37,20 +86,6 @@ pipeline {
             }
         }
     }*/
- 
-    /*stage('Test') {
-      parallel {
-        stage('Static code analysis') {
-            steps { sh 'npm run-script lint' }
-        }
-        stage('Unit tests') {
-            steps { sh 'npm run-script test' }
-        }
-      }
-    }
- 
-    stage('Build') {
-      steps { sh 'npm run-script build' }
-    }*/
+
   }
 }
