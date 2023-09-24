@@ -3,9 +3,7 @@ pipeline {
         pollSCM('* * * * *')
     }
 
-    agent {
-        docker { image 'node:16.20.2' }
-    }
+    agent any
    
   stages {
     stage('INSTALL'){
@@ -14,7 +12,8 @@ pipeline {
                 echo "========================> main test"
                 sh '''
                     node -v
-                    sudo npm install
+                    npm -v
+                    npm install
                 '''
             }
         }
