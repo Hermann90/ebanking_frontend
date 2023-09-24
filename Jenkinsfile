@@ -139,7 +139,7 @@ pipeline {
                     echo ${JSON_PARAMS.DEPLOY_HOST_NAME}
                     echo ${JSON_PARAMS.APP_USER}
                     echo ${JSON_PARAMS.APP_PASSWORD}
-                    echo $${JSON_PARAMS.APP_PATH}
+                    echo ${JSON_PARAMS.APP_PATH}
                     echo ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
                     printenv
                     echo Pulling... $GIT_BRANCH
