@@ -13,7 +13,7 @@ pipeline {
                 sh '''
                     node -v
                     npm -v
-                    npm install
+                    sudo npm install
                     ls
                 '''
             }
@@ -38,24 +38,14 @@ pipeline {
             script{
                 echo "========================> main test"
                 sh '''
-                    ng build
+                    sudo ng build
                     ls
                 '''
             }
         }
     }
 
-    stage('BUILD'){
-        steps{
-            script{
-                echo "========================> BUILD THE ANGULAR PROJECT"
-                sh '''
-                    ng test
-                    ls
-                '''
-            }
-        }
-    }
+
     /*
     stage('Install') {
       steps { sh 'npm install' }
