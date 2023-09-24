@@ -2,17 +2,18 @@ pipeline {
    triggers {
         pollSCM('* * * * *')
     }
-    
-   agent any
-    tools {
-        maven 'M2_HOME'
+
+    agent {
+        docker { image 'node:16.20.2' }
     }
+   
   stages {
     stage('INSTALL'){
         steps{
             script{
                 echo "========================> main test"
                 sh '''
+                    node -v
                     npm install
                 '''
             }
