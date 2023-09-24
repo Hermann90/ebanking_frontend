@@ -32,24 +32,13 @@ pipeline {
         }
     }
 
-    stage('ANALYZE'){
-        steps{
-            script{
-                echo "========================> main test"
-                sh '''
-                    npm run-script lint
-                    ls
-                '''
-            }
-        }
-    }
 
     stage('UNIT TEST'){
         steps{
             script{
                 echo "========================> main test"
                 sh '''
-                    npm run-script test
+                    ng test
                     ls
                 '''
             }
@@ -59,9 +48,9 @@ pipeline {
     stage('BUILD'){
         steps{
             script{
-                echo "========================> main test"
+                echo "========================> BUILD THE ANGULAR PROJECT"
                 sh '''
-                    npm run-script build
+                    ng build
                     ls
                 '''
             }
