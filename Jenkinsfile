@@ -14,7 +14,7 @@ pipeline {
                 echo "========================> main test"
                 sh '''
                     node -v
-                    npm install
+                    sudo npm install
                 '''
             }
         }
