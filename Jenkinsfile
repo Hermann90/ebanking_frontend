@@ -38,7 +38,7 @@ pipeline {
             script{
                 echo "========================> main test"
                 sh '''
-                    ng test
+                    ng build
                     ls
                 '''
             }
@@ -50,7 +50,7 @@ pipeline {
             script{
                 echo "========================> BUILD THE ANGULAR PROJECT"
                 sh '''
-                    ng build
+                    ng test
                     ls
                 '''
             }
