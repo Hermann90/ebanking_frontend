@@ -15,8 +15,6 @@ pipeline {
                     
                 sh """#!/bin/bash
                     echo START =======> install_and_config_python_modules
-                    sudo yum update -y
-                    sudo yum install jq -y
                     python3 -m venv ebank
                     source ebank/bin/activate
                     
