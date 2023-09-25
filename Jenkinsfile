@@ -34,7 +34,7 @@ pipeline {
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/make_params_front.py" -H "accept: application/json" -o make_params_front.py
                     
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/stop_ebank.sh" -H "accept: application/json" -o stop_ebank.sh
-                    curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/start_ebank.sh" -H "accept: application/json" -o start_ebank.sh
+                    curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/start_ebank_front.sh" -H "accept: application/json" -o start_ebank_front.sh
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/start_app.py" -H "accept: application/json" -o start_app.py
                     
                     curl -L -u $NEXUS_USER:$NEXUS_PASSWORD -X GET "$NEXUS_URL:8081/repository/$DEVOPS_SCRIPTS_REPO/upload_file_to_server.py" -H "accept: application/json" -o upload_file_to_server.py
@@ -103,8 +103,8 @@ pipeline {
         steps{
             script{
                 sh """
-                    echo sudo zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip dist
-                    sudo zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip dist
+                    echo sudo -r zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip dist
+                    sudo zip -r ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip dist
                     ls
                 """                  
             }
@@ -145,36 +145,30 @@ pipeline {
                     printenv
                     echo Pulling... $GIT_BRANCH
                     python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} start_ebank.sh start_ebank.sh
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} stop_ebank.sh stop_ebank.sh
-                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} init_env.sh init_env.sh                          
+                    python3 upload_file_to_server.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} start_ebank_front.sh start_ebank_front.sh                         
                 """                  
             }
         }
     }
 
+    stage('LAUNCH FRONT APP'){
+        steps{
+            script{
+                sh """
+                    python3 -m venv ebank
+                    source ebank/bin/activate
+                    
+                    export PYTHONPATH=.
+                    pip3 install paramiko
+                    pip3 install certifi
 
-    /*"DEVOPS_SCRIPTS_REPO" : os.getenv('DEVOPS_SCRIPTS_REPO'), "APP_USER":os.getenv('APP_QA_USER'), "APP_PASSWORD":os.getenv('APP_QA_PASSWORD'), "APP_PATH":os.getenv('${JSON_PARAMS.APP_PATH}'), 
-                           "APP_NAME" : app_name})
-
-    stage('Install') {
-      steps { sh 'npm install' }
-    }
-
-    stage('MAVEN PACKAGE') {
-            steps {
-                script{
-                    echo "========================> main test"
-                    echo "${JSON_PARAMS.NEXUS_REPO_NAME}"
-                    sh '''sudo cat conf_nexus_repo.xml > /opt/maven/conf/settings.xml
-                     echo ${APP_APP_VERSION}
-                    mvn clean
-                    mvn package -DskipTests
-                    echo ${NEXUS_URL}:8081/repository/$DATABASE_URL_PROD/init_env.sh
-                    '''
+                    echo Pulling... $GIT_BRANCH
+                    printenv
+                    echo python3 start_app.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} ${JSON_PARAMS.NEXUS_REPO_NAME} start_ebank_front.sh ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip zip
+                    python3 start_app.py ${JSON_PARAMS.DEPLOY_HOST_NAME} ${JSON_PARAMS.APP_USER} ${JSON_PARAMS.APP_PASSWORD} ${JSON_PARAMS.APP_PATH} ${JSON_PARAMS.NEXUS_REPO_NAME} start_ebank_front.sh ${JSON_PARAMS.APP_NAME}-${JSON_PARAMS.APP_VERSION}.zip zip                      
+                """                  
             }
         }
-    }*/
-
+    }
   }
 }
